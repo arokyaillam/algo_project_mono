@@ -1,7 +1,7 @@
 // packages/data-fetcher/src/services/websocket.service.ts
 
 import WebSocket from 'ws';
-import { getMarketFeedUrl } from './upstoxAuth.services';
+import { getMarketFeedUrl } from './upstoxAuth.service';
 import { decodeProtobuf } from './decode.service';
 
 // A function to handle the live feed data.

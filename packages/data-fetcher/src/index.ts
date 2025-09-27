@@ -1,21 +1,29 @@
-// packages/data-fetcher/src/index.ts
-
 import { initProtobuf } from './services/decode.service';
 import { connectAndSubscribe } from './services/websocket.service';
+import { findAtmOptionKeys} from './services/instrument.service';
 
 // --- Configuration ---
-const accessToken = "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiI3QkJSUkUiLCJqdGkiOiI2OGQ3N2VhZTcyOGJjMjdkMmFjY2I1MTgiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaWF0IjoxNzU4OTUzMTM0LCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3NTkwMTA0MDB9.XQfZQP9z5tsa8uWdyvhSFSpZGBBBvoWMQ78qyeSLXhY"; // IMPORTANT: Replace with your actual token
-const instrumentsToWatch = ["NSE_INDEX|Nifty 50", "NSE_INDEX|Nifty Bank"];
+const accessToken = "eyJ0eXAiOiJKV1QiLCJrZXlfaWQiOiJza192MS4wIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiI3QkJSUkUiLCJqdGkiOiI2OGQ3Y2MyMjcyOGJjMjdkMmFjY2I2YzgiLCJpc011bHRpQ2xpZW50IjpmYWxzZSwiaXNQbHVzUGxhbiI6dHJ1ZSwiaWF0IjoxNzU4OTcyOTYyLCJpc3MiOiJ1ZGFwaS1nYXRld2F5LXNlcnZpY2UiLCJleHAiOjE3NTkwMTA0MDB9.AJLAOv8RUrn59BaGql3anRZsCmrVp65vocFbew0QD3I";
+const expiryDate = '2025-09-30';
+
+const instrumentsToWatch = ['NSE_INDEX|Nifty 50'];
 
 /**
  * The main function to start the data fetcher service.
  */
 const startDataFetcher = async () => {
   try {
-    // Step 1: Load the protobuf schema first. This is essential.
-    await initProtobuf();
+    // A single call to find ATM strike and keys
+    const atmKeys = await findAtmOptionKeys(accessToken, expiryDate);
 
-    // Step 2: Connect to the WebSocket and subscribe to instruments.
+    // If keys are found, add them to our watch list
+    if (atmKeys) {
+      instrumentsToWatch.push(atmKeys.atmCallKey);
+      instrumentsToWatch.push(atmKeys.atmPutKey);
+    }
+    
+    // Initialize Protobuf and connect to WebSocket
+    await initProtobuf();
     await connectAndSubscribe(accessToken, instrumentsToWatch);
 
   } catch (error) {
@@ -24,9 +32,11 @@ const startDataFetcher = async () => {
 };
 
 // Start the service
+
 startDataFetcher();
 
-// We also export our functions so the core-engine can use them later.
-export * from './services/upstoxAuth.services';
+// Export all functions so the core-engine can use them later
+export * from './services/upstoxAuth.service';
 export * from './services/decode.service';
 export * from './services/websocket.service';
+export * from './services/instrument.service';
