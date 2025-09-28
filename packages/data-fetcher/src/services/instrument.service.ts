@@ -40,10 +40,17 @@ export const findAtmOptionKeys = async (
       expiry_date: expiryDate,
     };
 
-    const response = await axios.get(
-      'https://api.upstox.com/v2/option/chain',
-      { headers, params }
-    );
+    // Use the correct v2 option chain endpoint with query parameters
+    const endpoint = 'https://api.upstox.com/v2/option/chain';
+
+    console.log(`🔎 Fetching option chain from correct endpoint: ${endpoint}`);
+    console.log(`[DEBUG] Query params: instrument_key=${params.instrument_key}, expiry_date=${params.expiry_date}`);
+
+    const response = await axios.get(endpoint, { headers, params });
+
+    if (!response) {
+      throw new Error('No response received from any endpoint');
+    }
 
     const optionChain: OptionChainItem[] = response.data.data;
     
