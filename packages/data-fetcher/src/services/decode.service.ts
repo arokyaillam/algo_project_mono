@@ -2,13 +2,18 @@
 
 import protobuf from 'protobufjs';
 import path from 'path';
+import { FeedResponse } from '../types';
 
-// Protobuf schema-வை ஒருமுறை load செய்த பிறகு, அதை இங்கே சேமிப்போம்.
+/**
+ * Protobuf root instance - cached after initial load
+ */
 let protobufRoot: protobuf.Root | null = null;
 
 /**
  * Loads the .proto file and initializes the protobuf schema.
  * This must be called once when the application starts.
+ *
+ * @throws {Error} If the protobuf schema cannot be loaded
  */
 export const initProtobuf = async (): Promise<void> => {
   try {
@@ -17,33 +22,33 @@ export const initProtobuf = async (): Promise<void> => {
     console.log('✅ Protobuf schema loaded successfully.');
   } catch (error) {
     console.error('❌ Failed to load Protobuf schema:', error);
-    throw new Error('Could not initialize Protobuf.');
+    throw new Error('Could not initialize Protobuf schema. Please check the .proto file path.');
   }
 };
 
 /**
- * Decodes a protobuf buffer into a JSON object.
- * @param buffer The binary buffer received from the WebSocket.
- * @returns The decoded message as a JSON object.
+ * Decodes a protobuf buffer into a structured object.
+ *
+ * @param buffer - The binary buffer received from the WebSocket
+ * @returns The decoded message as a structured object or null if decoding fails
  */
-export const decodeProtobuf = (buffer: Buffer): any => {
+export const decodeProtobuf = (buffer: Buffer): FeedResponse | null => {
   if (!protobufRoot) {
-    // This is a critical error, the app should not continue if this happens.
     console.error('FATAL: Protobuf schema is not initialized. Call initProtobuf() first.');
     return null;
   }
 
   try {
     // Look up the specific message type from the loaded schema
-    const FeedResponse = protobufRoot.lookupType(
+    const FeedResponseType = protobufRoot.lookupType(
       "com.upstox.marketdatafeederv3udapi.rpc.proto.FeedResponse"
     );
-    
+
     // Decode the buffer using the message type
-    const decodedMessage = FeedResponse.decode(buffer);
-    
+    const decodedMessage = FeedResponseType.decode(buffer);
+
     // Convert the decoded message to a plain JavaScript object
-    return FeedResponse.toObject(decodedMessage);
+    return FeedResponseType.toObject(decodedMessage) as FeedResponse;
 
   } catch (error) {
     console.error('❌ Error decoding protobuf message:', error);

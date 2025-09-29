@@ -1,15 +1,23 @@
 // packages/data-fetcher/src/services/calculation.service.ts
 
-// --- State variables for real-time calculation ---
+import { FeedResponse } from '../types';
+
+/**
+ * State variables for real-time calculation
+ */
 let atmStrike: number | null = null;
 let atmCallKey: string | null = null;
 let atmPutKey: string | null = null;
 const latestPrices = new Map<string, number>(); // To store the last price of each instrument
 
 /**
- * Called from index.ts to set the ATM details.
+ * Sets the ATM details for real-time calculation.
+ *
+ * @param strike - The ATM strike price
+ * @param callKey - The ATM call option instrument key
+ * @param putKey - The ATM put option instrument key
  */
-export const setAtmDetails = (strike: number, callKey: string, putKey: string) => {
+export const setAtmDetails = (strike: number, callKey: string, putKey: string): void => {
   atmStrike = strike;
   atmCallKey = callKey;
   atmPutKey = putKey;
@@ -17,11 +25,11 @@ export const setAtmDetails = (strike: number, callKey: string, putKey: string) =
 };
 
 /**
- * This function is called by the WebSocket service every time a new feed arrives.
- * It processes the data and calculates the synthetic future.
- * @param data The decoded feed data from the WebSocket.
+ * Processes incoming feed data and calculates synthetic future.
+ *
+ * @param data - The decoded feed data from the WebSocket
  */
-export const processFeedData = (data: any) => {
+export const processFeedData = (data: FeedResponse): void => {
    console.log(`[DEBUG] processFeedData called with ${Object.keys(data.feeds || {}).length} instruments`);
    console.log(`[DEBUG] Raw data structure:`, JSON.stringify(data, null, 2));
 
